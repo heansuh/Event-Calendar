@@ -115,6 +115,9 @@ def scrape_rausgegangen_hh_ki_hl_fl():
 
     df_raw = pd.DataFrame(data)
     df_raw = df_raw[['Subject', 'Date', 'Time', 'Location', 'Price', 'Source', 'City', 'Category', 'Music label']]
+
+    driver.close()
+    
     return df_raw
 
 
