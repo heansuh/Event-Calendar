@@ -97,7 +97,7 @@ def scrape_rausgegangen_hh_ki_hl_fl():
                         "Price": price,
                         "City": part[1],
                         "Category": part[2],
-                        "Music label": "music"
+                        "Music label": True
                     })
 
             except Exception as e:
@@ -126,7 +126,7 @@ def scrape_rausgegangen_hh_ki_hl_fl():
 def preprocess_rausgegangen(df_raw):
 
     df_raw.rename(columns={'Time': 'Start_time'}, inplace=True)
-    df_raw["End_time"] = "N/A"
+    df_raw["End_time"] = " "
 
     df_raw['Description'] = df_raw['Source'] + ' , Preis: ' + df_raw['Price']
     df_raw.drop(columns=['Source', 'Price'], inplace=True)

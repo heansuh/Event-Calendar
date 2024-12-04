@@ -46,19 +46,19 @@ def scrape_sh_tourismus(days_in_advance=10):
         try:
             event_category = article.find_element(By.CSS_SELECTOR, 'p.-IMXEVNT-listElement__text__subline').text
         except NoSuchElementException:
-            event_category = 'N/A'
+            event_category = ' '
 
         try:
             event_title = article.find_element(By.CSS_SELECTOR, 'span.-IMXEVNT-title').get_attribute('data-uppertitle')
         except NoSuchElementException:
-            event_title = 'N/A'
+            event_title = ' '
 
         try:
             event_date_location = article.find_element(By.CSS_SELECTOR, 'p.-IMXEVNT-listElement__text__info').text
         except NoSuchElementException:
-            event_date_location = 'N/A'
+            event_date_location = ' '
 
-        if event_date_location != 'N/A':
+        if event_date_location != ' ':
             parts = [x.strip() for x in event_date_location.split('/')]
         else:
             parts = []
@@ -68,17 +68,17 @@ def scrape_sh_tourismus(days_in_advance=10):
         elif len(parts) == 2:
             date, time, location = parts[0], parts[1], ''
         else:
-            date, time, location = 'N/A', 'N/A', 'N/A'
+            date, time, location = ' ', ' ', ' '
 
         if ',' in location:
             location, city = [x.strip() for x in location.rsplit(',', 1)]
         else:
-            location, city = location, 'N/A'
+            location, city = location, ' '
 
         try:
             event_source = article.find_element(By.CSS_SELECTOR, 'h2 a').get_attribute('href')
         except NoSuchElementException:
-            event_title = 'N/A'
+            event_title = ' '
 
         events_data.append({
             'Category': event_category,
@@ -125,7 +125,7 @@ def preprocess_time(time_str):
         end_time = end_time.replace(' Uhr', '')
     else:
         start_time = time_str.replace(' Uhr', '')
-        end_time = 'N/A'
+        end_time = ' '
     return pd.Series([start_time, end_time])
 
 
@@ -134,8 +134,8 @@ music = ['Konzert', 'konzert', 'Musik', 'musik', 'Party', 'party', 'Tanz', 'tanz
 def check_music(category):
     for word in music:
         if word in category:
-            return 'music'
-    return 'no music'
+            return True
+    return False
 
 
 # Example usage

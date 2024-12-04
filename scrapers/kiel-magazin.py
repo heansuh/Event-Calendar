@@ -70,7 +70,7 @@ def scrape_kiel_magazin(days_in_advance=30):
                     times = date.split(" ab ")[1][:-4]
                 else:
                     datedate = date
-                    times = "N/A"
+                    times = " "
 
                 location = date_and_location[1].strip() if len(date_and_location) > 1 else ""
 
@@ -83,11 +83,11 @@ def scrape_kiel_magazin(days_in_advance=30):
                     "Start_date": datedate,
                     "End_date": datedate,
                     "Start_time": times,
-                    "End_time": "N/A",
+                    "End_time": " ",
                     "Location": location.split(',')[0],
                     "City": location.split(',')[-1],
                     "Category": category,
-                    "Music_label": "music"
+                    "Music_label": True
                 }
                 events.append(event)
             except Exception as e:

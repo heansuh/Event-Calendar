@@ -43,17 +43,17 @@ def scrape_biunsinnorden_sh_hh():
             try:
                 start_time = event.find_element(By.CSS_SELECTOR, '.time.standard').text[:-4]
             except Exception as e:
-                start_time = "N/A"
+                start_time = " "
 
             #collect rest of the info
             event_info = {
                 'Start_date': event.find_element(By.CSS_SELECTOR, 'meta[itemprop="startDate"]').get_attribute('content')[:-6],
                 'End_date': event.find_element(By.CSS_SELECTOR, 'meta[itemprop="startDate"]').get_attribute('content')[:-6],
                 'Start_time': start_time,
-                'End_time': "N/A",
+                'End_time': " ",
                 'Subject': event.find_element(By.CSS_SELECTOR, '.title a').get_attribute('title'),
                 'Category': event.find_element(By.CSS_SELECTOR, '.category').text,
-                'Music_label': "music",
+                'Music_label': True,
                 'Location': event.find_element(By.CSS_SELECTOR, '.venue a').get_attribute('title'),
                 'City': event.find_element(By.CSS_SELECTOR, '.city span[itemprop="addressLocality"]').text,
                 'Description': event.find_element(By.CSS_SELECTOR, '.title a').get_attribute('href')

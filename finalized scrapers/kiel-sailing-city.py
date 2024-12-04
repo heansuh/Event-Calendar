@@ -170,8 +170,8 @@ def check_music(category_list):
     for category in category_list:
         for word in music:
             if word in category:
-                return 'music'
-    return 'no music'
+                return True
+    return False
 
 def preprocess_time(time_str):
     if '-' in time_str:
@@ -179,7 +179,7 @@ def preprocess_time(time_str):
         end_time = end_time.replace(' Uhr', '')
     else:
         start_time = time_str.replace(' Uhr', '')
-        end_time = 'N/A'
+        end_time = ' '
     return pd.Series([start_time, end_time])
 
 

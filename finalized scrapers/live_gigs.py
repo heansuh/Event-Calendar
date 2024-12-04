@@ -85,13 +85,13 @@ def scrape_live_gigs_hh_sh():
                 'Subject': title,
                 'Description': source,
                 'Start_time': time_standard,
-                'End_time': "N/A",
+                'End_time': " ",
                 'Start_date': formatted_date, #label_date,
                 'End_date': formatted_date,
                 'Category': category,
                 'Location': location,
                 'City': city,
-                'Music_label': "music"
+                'Music_label': True
             })
 
         # nur einmal weiterblättern, dann sind schon die events des nächsten monats (+puffer) abgedeckt

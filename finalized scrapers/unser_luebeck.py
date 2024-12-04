@@ -72,7 +72,7 @@ def preprocess_unser_luebeck(df_raw):
     df_raw["End_date"] = df_raw["Start_date"]
 
     df_raw.rename(columns={'Time': 'Start_time'}, inplace=True)
-    df_raw["End_time"] = "N/A"
+    df_raw["End_time"] = " "
 
     df_raw.rename(columns={'Source': 'Description'}, inplace=True)    
 
@@ -161,8 +161,8 @@ def get_events_on_date(driver, currently_processed_date):
 
 def check_music(category):
     if category == "Musik":
-        return 'music'
-    return 'no music'
+        return True
+    return False
 
 
 # Example usage

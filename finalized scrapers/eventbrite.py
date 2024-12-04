@@ -73,7 +73,7 @@ def preprocess_eventbrite(df_raw):
     
     df_raw.drop(columns=['Date and time', 'Date formated'], inplace=True)
 
-    df_raw["End_time"] = "N/A"
+    df_raw["End_time"] = " "
 
     df_raw['Music_label'] = df_raw['Music_label'].apply(check_music_label)
 
@@ -118,9 +118,9 @@ def get_events_on_page(driver):
 def check_music_label(label):
     # Check if the string contains the word "music"
     if 'music' in label.lower():
-        return label
+        return True
     else:
-        return 'no music'
+        return False
     
 def extract_and_reformat_date(date_str):
     parts = date_str.split(',')

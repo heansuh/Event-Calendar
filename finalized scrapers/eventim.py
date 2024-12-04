@@ -72,7 +72,7 @@ def scrape_eventim(days_in_advance=30):
                     "Description": description,
                     "Source": source,
                     "Category": "Konzert",
-                    "Music_label": "music"
+                    "Music_label": True
                 })
 
             except Exception as e:
@@ -102,7 +102,7 @@ def preprocess_eventim(df_raw):
     df_raw.drop(columns=['Source'], inplace=True)
 
     df_raw.rename(columns={'Time': 'Start_time'}, inplace=True)
-    df_raw["End_time"] = "N/A"
+    df_raw["End_time"] = " "
 
     df_raw['Date'] = df_raw['Date'].str[-10:]
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
@@ -121,9 +121,9 @@ def split_location_date_time(value):
     if len(parts) == 3:
         return parts[0].strip(), parts[1].strip(), parts[2].strip()
     elif len(parts) == 2:
-        return parts[0].strip(), parts[1].strip(), "N/A"
+        return parts[0].strip(), parts[1].strip(), " "
     else:
-        return value.strip(), "N/A", "N/A"
+        return value.strip(), " ", " "
     
 
 # Example usage
