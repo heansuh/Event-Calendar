@@ -106,9 +106,13 @@ def preprocess_eventim(df_raw):
 
     df_raw['Date'] = df_raw['Date'].str[-10:]
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
+    df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
+    #df_raw["Start_date"] = pd.to_datetime(df_raw["Start_date"], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') #absichern mit funktion TODO die " " handlen kann
     df_raw["End_date"] = df_raw["Start_date"]
 
     df_raw["City"] = df_raw["Location"]
+
+    df_raw = df_raw.fillna(" ")
 
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
@@ -124,6 +128,13 @@ def split_location_date_time(value):
         return parts[0].strip(), parts[1].strip(), " "
     else:
         return value.strip(), " ", " "
+    
+def convert_date_format(date_str):
+    date_str = str(date_str)
+    if "." in date_str:
+        return pd.to_datetime(date_str, format='%d.%m.%Y').strftime('%Y-%m-%d')
+    else:
+        return " "
     
 
 # Example usage
