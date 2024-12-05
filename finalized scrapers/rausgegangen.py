@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 import pandas as pd
+from datetime import datetime
 import time
 
 
@@ -97,7 +98,7 @@ def scrape_rausgegangen_hh_ki_hl_fl():
                         "Price": price,
                         "City": part[1],
                         "Category": part[2],
-                        "Music label": "music"
+                        "Music label": True
                     })
 
             except Exception as e:
@@ -126,7 +127,7 @@ def scrape_rausgegangen_hh_ki_hl_fl():
 def preprocess_rausgegangen(df_raw):
 
     df_raw.rename(columns={'Time': 'Start_time'}, inplace=True)
-    df_raw["End_time"] = "N/A"
+    df_raw["End_time"] = " "
 
     df_raw['Description'] = df_raw['Source'] + ' , Preis: ' + df_raw['Price']
     df_raw.drop(columns=['Source', 'Price'], inplace=True)
@@ -134,9 +135,12 @@ def preprocess_rausgegangen(df_raw):
     df_raw['Date'] = df_raw['Date'].str.split(',').str[1].str.strip()
     df_raw['Date'] = df_raw['Date'].apply(convert_date)
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
+    df_raw['Start_date'] = df_raw['Start_date'].apply(convert_date_patch)
     df_raw["End_date"] = df_raw["Start_date"]
 
     df_raw.rename(columns={'Music label': 'Music_label'}, inplace=True)
+
+    df_raw = df_raw.fillna(" ")
 
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
@@ -163,6 +167,28 @@ def convert_date(date_str):
     day, month = date_str.split('. ')
     month_num = month_mapping[month]
     return f"{day}.{month_num}."
+
+# Function to convert date from DD.MM. to YYYY-MM-DD
+def convert_date_patch(date_str):
+    
+    if "." in date_str:
+        # Get current date
+        current_date = datetime.now()
+        
+        # Extract day and month from date_str, ensuring zero-padding
+        day, month = map(int, date_str.strip('.').split('.'))
+        
+        # Determine next possible year
+        next_year = current_date.year if (month > current_date.month or (month == current_date.month and day >= current_date.day)) else current_date.year + 1
+        
+        # Create a new date object
+        new_date = datetime(next_year, month, day)
+        
+        # Return the formatted date string
+        return new_date.strftime('%Y-%m-%d')
+    else:
+        return " "
+    
 
 # Example usage
 

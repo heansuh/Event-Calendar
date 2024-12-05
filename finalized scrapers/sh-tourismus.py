@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, NoSuchElementException
 
 import pandas as pd
+import time
 
 
 # Scraping function
@@ -25,9 +26,10 @@ def scrape_sh_tourismus(days_in_advance=10):
     driver.switch_to.frame(iframe)
 
     wait = WebDriverWait(driver, 10)
-    clicks = days_in_advance*30 + 100 
+    clicks = days_in_advance*30 + 100 #puffer kann deutlich reduziert evtl sogar gelöscht werden TODO
 
-    for i in range(clicks): #TODO maybe add sleeps
+    for i in range(clicks): #TODO evaluate sleeps
+        time.sleep(2)
         try:
             button = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, '-IMXEVENT-lazyLoadButton')))
             button.click()
@@ -46,45 +48,45 @@ def scrape_sh_tourismus(days_in_advance=10):
         try:
             event_category = article.find_element(By.CSS_SELECTOR, 'p.-IMXEVNT-listElement__text__subline').text
         except NoSuchElementException:
-            event_category = 'N/A'
+            event_category = ' '
 
         try:
             event_title = article.find_element(By.CSS_SELECTOR, 'span.-IMXEVNT-title').get_attribute('data-uppertitle')
         except NoSuchElementException:
-            event_title = 'N/A'
+            event_title = ' '
 
         try:
             event_date_location = article.find_element(By.CSS_SELECTOR, 'p.-IMXEVNT-listElement__text__info').text
         except NoSuchElementException:
-            event_date_location = 'N/A'
+            event_date_location = ' '
 
-        if event_date_location != 'N/A':
+        if event_date_location != ' ':
             parts = [x.strip() for x in event_date_location.split('/')]
         else:
             parts = []
 
         if len(parts) >= 3:
-            date, time, location = parts[0], parts[1], ' / '.join(parts[2:])
+            date, time_x, location = parts[0], parts[1], ' / '.join(parts[2:]) #benennung als time ungünstig TODO
         elif len(parts) == 2:
-            date, time, location = parts[0], parts[1], ''
+            date, time_x, location = parts[0], parts[1], ''
         else:
-            date, time, location = 'N/A', 'N/A', 'N/A'
+            date, time_x, location = ' ', ' ', ' '
 
         if ',' in location:
             location, city = [x.strip() for x in location.rsplit(',', 1)]
         else:
-            location, city = location, 'N/A'
+            location, city = location, ' '
 
         try:
             event_source = article.find_element(By.CSS_SELECTOR, 'h2 a').get_attribute('href')
         except NoSuchElementException:
-            event_title = 'N/A'
+            event_title = ' '
 
         events_data.append({
             'Category': event_category,
             'Title': event_title,
             'Date': date,
-            'Time': time,
+            'Time': time_x,
             'Location': location,
             'City': city,
             'Source': event_source
@@ -104,6 +106,8 @@ def preprocess_sh_tourismus(df_raw):
     df_raw.rename(columns={'Title': 'Subject'}, inplace=True)
 
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
+    df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
+    #df_raw["Start_date"] = pd.to_datetime(df_raw["Start_date"], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') #same as Eventim TODO
     df_raw["End_date"] = df_raw["Start_date"]
 
     df_raw[['Start_time', 'End_time']] = df_raw['Time'].apply(preprocess_time)
@@ -112,6 +116,8 @@ def preprocess_sh_tourismus(df_raw):
     df_raw.rename(columns={'Source': 'Description'}, inplace=True)    
 
     df_raw['Music_label'] = df_raw['Category'].apply(check_music)
+
+    df_raw = df_raw.fillna(" ")
 
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
@@ -125,7 +131,7 @@ def preprocess_time(time_str):
         end_time = end_time.replace(' Uhr', '')
     else:
         start_time = time_str.replace(' Uhr', '')
-        end_time = 'N/A'
+        end_time = ' '
     return pd.Series([start_time, end_time])
 
 
@@ -134,8 +140,15 @@ music = ['Konzert', 'konzert', 'Musik', 'musik', 'Party', 'party', 'Tanz', 'tanz
 def check_music(category):
     for word in music:
         if word in category:
-            return 'music'
-    return 'no music'
+            return True
+    return False
+
+def convert_date_format(date_str):
+    date_str = str(date_str)
+    if "." in date_str:
+        return pd.to_datetime(date_str, format='%d.%m.%Y').strftime('%Y-%m-%d')
+    else:
+        return " "
 
 
 # Example usage
