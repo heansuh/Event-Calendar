@@ -69,6 +69,8 @@ def scrape_biunsinnorden_sh_hh():
 # Preprocessing function
 
 def preprocess_biunsinnorden(df_raw):
+    df_raw['City'] = df_raw['City'].str.title()
+    df_raw = df_raw.fillna(" ")
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
 
