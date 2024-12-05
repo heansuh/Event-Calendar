@@ -112,9 +112,24 @@ def scrape_live_gigs_hh_sh():
 # Preprocessing function
 
 def preprocess_live_gigs(df_raw):
+    df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
+    df_raw["End_date"] = df_raw["End_date"].apply(convert_date_format)
+    #df_raw["Start_date"] = pd.to_datetime(df_raw["Start_date"], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') #same as eventim TODO
+    #df_raw["End_date"] = pd.to_datetime(df_raw["End_date"], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') #same as eventim TODO
+    df_raw['City'] = df_raw['City'].str.title()
+    df_raw = df_raw.fillna(" ")
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
 
+
+# Helper functions and elements
+
+def convert_date_format(date_str):
+    date_str = str(date_str)
+    if "." in date_str:
+        return pd.to_datetime(date_str, format='%d.%m.%Y').strftime('%Y-%m-%d')
+    else:
+        return " "
 
 # Example usage
 
