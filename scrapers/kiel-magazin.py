@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 
 def scrape_kiel_magazin(days_in_advance=30):
 
-    days_in_advance = 30
+    days_in_advance = days_in_advance
     today = datetime.today().date()
     today_plus_x = today + timedelta(days=days_in_advance)
     i = 1
@@ -104,19 +104,57 @@ def scrape_kiel_magazin(days_in_advance=30):
 
 def preprocess_kiel_magazin(df_raw):
 
-    df_raw['Start_date'] = df_raw['Start_date'].str.strip()
-    df_raw['End_date'] = df_raw['End_date'].str.strip()
-    df_raw['Start_date'] = pd.to_datetime(df_raw['Start_date'], format='%d. %B %Y', dayfirst=True).dt.strftime('%Y-%m-%d')
-    df_raw['End_date'] = pd.to_datetime(df_raw['End_date'], format='%d. %B %Y', dayfirst=True).dt.strftime('%Y-%m-%d')
+    df_raw['Start_date'] = df_raw['Start_date'].str.strip().apply(add_leading_zero_to_day).apply(convert_date_to_yyyy_mm_dd)
+    df_raw['End_date'] = df_raw['End_date'].str.strip().apply(add_leading_zero_to_day).apply(convert_date_to_yyyy_mm_dd)
+    
+    #df_raw['Start_date'] = df_raw['Start_date'].str.strip()
+    #df_raw['End_date'] = df_raw['End_date'].str.strip()
+    #df_raw['Start_date'] = pd.to_datetime(df_raw['Start_date'], format='%d. %B %Y', dayfirst=True).dt.strftime('%Y-%m-%d')
+    #df_raw['End_date'] = pd.to_datetime(df_raw['End_date'], format='%d. %B %Y', dayfirst=True).dt.strftime('%Y-%m-%d')
     
     df_raw[['Start_time', 'End_time']] = df_raw['Start_time'].str.split(' bis ', expand=True)  
+
+    df_raw['City'] = df_raw['City'].str.title()
+    df_raw = df_raw.fillna(" ")
 
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
 
 
+# Helper functions and elements
+
+def add_leading_zero_to_day(date_str):
+    parts = date_str.split('. ')
+    if len(parts[0]) == 1:
+        parts[0] = '0' + parts[0]
+    return ' '.join(parts)
+
+def convert_date_to_yyyy_mm_dd(date_str):
+    parts = date_str.split(' ')
+    day = parts[0]
+    month = month_mapping[parts[1]]
+    year = parts[2]
+    return f"{year}-{month}-{day}"
+
+month_mapping = {
+    'Januar': '01',
+    'Februar': '02',
+    'März': '03',
+    'April': '04',
+    'Mai': '05',
+    'Juni': '06',
+    'Juli': '07',
+    'August': '08',
+    'September': '09',
+    'Oktober': '10',
+    'November': '11',
+    'Dezember': '12'
+}
+
+
 # Example usage
 
 df_raw = scrape_kiel_magazin(30)
+#df_raw.to_csv("Test1234.csv")
 df_prep = preprocess_kiel_magazin(df_raw)
 df_prep.to_csv("Scraped_Events_Kiel_Magazin.csv")
