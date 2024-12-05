@@ -69,6 +69,8 @@ def preprocess_unser_luebeck(df_raw):
     df_raw.rename(columns={'Event': 'Subject'}, inplace=True)
 
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
+    df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
+    #df_raw["Start_date"] = pd.to_datetime(df_raw["Start_date"], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') #same as Eventim TODO
     df_raw["End_date"] = df_raw["Start_date"]
 
     df_raw.rename(columns={'Time': 'Start_time'}, inplace=True)
@@ -77,6 +79,8 @@ def preprocess_unser_luebeck(df_raw):
     df_raw.rename(columns={'Source': 'Description'}, inplace=True)    
 
     df_raw['Music_label'] = df_raw['Category'].apply(check_music)
+
+    df_raw = df_raw.fillna(" ")
 
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
@@ -164,6 +168,12 @@ def check_music(category):
         return True
     return False
 
+def convert_date_format(date_str):
+    date_str = str(date_str)
+    if "." in date_str:
+        return pd.to_datetime(date_str, format='%d.%m.%Y').strftime('%Y-%m-%d')
+    else:
+        return " "
 
 # Example usage
 
