@@ -69,6 +69,7 @@ def preprocess_eventbrite(df_raw):
     df_raw["Category"] = df_raw["Music_label"]
 
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
+    df_raw['Start_date'] = df_raw['Start_date'].apply(convert_date)
     df_raw["End_date"] = df_raw["Start_date"]
     
     df_raw.drop(columns=['Date and time', 'Date formated'], inplace=True)
@@ -76,6 +77,8 @@ def preprocess_eventbrite(df_raw):
     df_raw["End_time"] = " "
 
     df_raw['Music_label'] = df_raw['Music_label'].apply(check_music_label)
+
+    df_raw = df_raw.fillna(" ")
 
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
@@ -147,6 +150,27 @@ def parse_relative_date(date_str):
         return (today + timedelta(days=1)).strftime('%d.%m.') #%Y')
     else:
         return date_str
+    
+# Function to convert date from DD.MM. to YYYY-MM-DD
+def convert_date(date_str):
+    
+    if "." in date_str:
+        # Get current date
+        current_date = datetime.now()
+        
+        # Extract day and month from date_str, ensuring zero-padding
+        day, month = map(int, date_str.strip('.').split('.'))
+        
+        # Determine next possible year
+        next_year = current_date.year if (month > current_date.month or (month == current_date.month and day >= current_date.day)) else current_date.year + 1
+        
+        # Create a new date object
+        new_date = datetime(next_year, month, day)
+        
+        # Return the formatted date string
+        return new_date.strftime('%Y-%m-%d')
+    else:
+        return " "
     
 
 # Example usage
