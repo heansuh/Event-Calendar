@@ -80,7 +80,7 @@ def scrape_sh_tourismus(days_in_advance=10):
         try:
             event_source = article.find_element(By.CSS_SELECTOR, 'h2 a').get_attribute('href')
         except NoSuchElementException:
-            event_title = ' '
+            event_source = ' '
 
         events_data.append({
             'Category': event_category,
