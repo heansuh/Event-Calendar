@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 import time
@@ -22,9 +24,15 @@ def scrape_kiel_magazin(days_in_advance=30):
     today_plus_x = today + timedelta(days=days_in_advance)
     i = 1
 
+    # preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     url = f"https://www.kiel-magazin.de/veranstaltungssuche/konzerte/0/{today.year}-{today.month:02d}-{today.day:02d}/{today_plus_x.year}-{today_plus_x.month:02d}-{today_plus_x.day:02d}/0/{i}"
 
-    driver = webdriver.Firefox()
+    #driver = webdriver.Firefox()
+    driver = webdriver.Chrome(service=Service(), options=options)
     driver.get(url)
     time.sleep(5)
     wait = WebDriverWait(driver, 10)
@@ -158,3 +166,5 @@ df_raw = scrape_kiel_magazin(30)
 #df_raw.to_csv("Test1234.csv")
 df_prep = preprocess_kiel_magazin(df_raw)
 df_prep.to_csv("Scraped_Events_Kiel_Magazin.csv")
+print(df_prep.head())
+print(df_prep.info())
