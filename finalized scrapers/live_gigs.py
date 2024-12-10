@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 import time
@@ -16,8 +18,14 @@ import time
 
 def scrape_live_gigs_hh_sh():
 
+    # preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     url = "https://www.livegigs.de/neumuenster/umkreis-100#Termine"
-    driver = webdriver.Firefox()
+    driver = webdriver.Chrome(service=Service(), options=options)
+    #driver = webdriver.Firefox()
     driver.get(url)
     wait = WebDriverWait(driver, 10)
 
@@ -136,3 +144,5 @@ def convert_date_format(date_str):
 df_raw = scrape_live_gigs_hh_sh()
 df_prep = preprocess_live_gigs(df_raw)
 df_prep.to_csv("Scraped_Events_Live_Gigs_HH_SH.csv")
+print(df_prep.head())
+print(df_prep.info())

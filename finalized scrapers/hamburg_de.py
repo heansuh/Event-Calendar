@@ -8,6 +8,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, NoSuchElementException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 import time
@@ -17,7 +19,13 @@ import time
 
 def scrape_hamburg_de(days_in_advance=10):
     
-    driver = webdriver.Firefox()
+    # Preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Chrome(service=Service(), options=options)
+    #driver = webdriver.Firefox()
     driver.get("https://www.hamburg.de/kultur/veranstaltungen")
     wait = WebDriverWait(driver, 10)
 
@@ -182,3 +190,5 @@ def convert_date_format(date_str):
 df_raw = scrape_hamburg_de(10)
 df_prep = preprocess_hamburg_de(df_raw)
 df_prep.to_csv("Scraped_Events_Hamburg.csv")
+print(df_prep.head())
+print(df_prep.info())

@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 import time
@@ -17,12 +19,17 @@ from datetime import datetime, timedelta
 
 def scrape_eventbrite_hh_sh():
 
+    # preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     urls = ["https://www.eventbrite.de/d/germany--hamburg/music--events--this-month/?page=1",
         "https://www.eventbrite.de/d/germany--hamburg/music--events--next-month/?page=1",
         "https://www.eventbrite.de/d/germany--schleswig-holstein/music--events--this-month/?page=1",
         "https://www.eventbrite.de/d/germany--schleswig-holstein/music--events--next-month/?page=1"]
-    
-    driver = webdriver.Firefox()
+    driver = webdriver.Chrome(service=Service(), options=options)
+    #driver = webdriver.Firefox()
     df_raw = pd.DataFrame()
 
     for url in urls:
@@ -132,7 +139,7 @@ def extract_and_reformat_date(date_str):
         day, month = date_part.split()
         month_map = {
             'Jan.': '01', 'Feb.': '02', 'Mär.': '03', 'Apr.': '04',
-            'Mai.': '05', 'Jun.': '06', 'Jul.': '07', 'Aug.': '08',
+            'Mai': '05', 'Jun.': '06', 'Jul.': '07', 'Aug.': '08',
             'Sep.': '09', 'Okt.': '10', 'Nov.': '11', 'Dez.': '12'
         }
         day = day.zfill(2)
@@ -178,3 +185,5 @@ def convert_date(date_str):
 df_raw = scrape_eventbrite_hh_sh()
 df_prep = preprocess_eventbrite(df_raw)
 df_prep.to_csv("Scraped_Events_HH_SH_Eventbrite.csv")
+print(df_prep.head())
+print(df_prep.info())

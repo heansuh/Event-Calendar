@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 from datetime import datetime
@@ -34,7 +36,12 @@ def scrape_rausgegangen_hh_ki_hl_fl():
     ]
 
     # preparations (cookie rejection, language settings etc)
-    driver = webdriver.Firefox()
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Chrome(service=Service(), options=options)
+    #driver = webdriver.Firefox()
     driver.get("https://rausgegangen.de/hamburg/kategorie/konzerte-und-musik/")
 
     # cookie rejection
@@ -45,7 +52,7 @@ def scrape_rausgegangen_hh_ki_hl_fl():
     except Exception as e:
         print(f"An error occurred: {e}")
 
-    # change website to German
+    # change website to German (TODO unter chrome nicht nötig, aber stört den Prozess auch nicht)
     try:
         sidemenu_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Sidemenu"]')))
         sidemenu_button.click()
@@ -195,3 +202,5 @@ def convert_date_patch(date_str):
 df_raw = scrape_rausgegangen_hh_ki_hl_fl()
 df_prep = preprocess_rausgegangen(df_raw)
 df_prep.to_csv("Scraped_Events_Rausgegangen_HH_KI_HL_FL.csv")
+print(df_prep.head())
+print(df_prep.info())

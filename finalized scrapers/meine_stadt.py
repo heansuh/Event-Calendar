@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 from datetime import datetime
@@ -44,7 +46,13 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
         "https://veranstaltungen.meinestadt.de/itzehoe/festivals/alle"
     ]
     
-    driver = webdriver.Firefox()
+    # preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Chrome(service=Service(), options=options)
+    #driver = webdriver.Firefox()
     wait = WebDriverWait(driver, 10) 
 
     events = []
@@ -158,3 +166,5 @@ def process_city_location(citlocstr):
 df_raw = scrape_meine_stadt()
 df_prep = preprocess_meine_stadt(df_raw)
 df_prep.to_csv("Scraped_Events_Meine_Stadt.csv")
+print(df_prep.head())
+print(df_prep.info())
