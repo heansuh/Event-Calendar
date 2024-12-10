@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 from datetime import datetime
@@ -16,6 +18,12 @@ import time
 # Scraping function
 
 def scrape_rausgegangen_hh_ki_hl_fl():
+
+    # Preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
     # urls and relevant info to scrape
     scraping = [
@@ -34,7 +42,7 @@ def scrape_rausgegangen_hh_ki_hl_fl():
     ]
 
     # preparations (cookie rejection, language settings etc)
-    driver = webdriver.Firefox()
+    driver = webdriver.Chrome(service=Service(), options=options)
     driver.get("https://rausgegangen.de/hamburg/kategorie/konzerte-und-musik/")
 
     # cookie rejection
@@ -132,7 +140,8 @@ def preprocess_rausgegangen(df_raw):
     df_raw['Description'] = df_raw['Source'] + ' , Preis: ' + df_raw['Price']
     df_raw.drop(columns=['Source', 'Price'], inplace=True)
 
-    df_raw['Date'] = df_raw['Date'].str.split(',').str[1].str.strip()
+    df_raw['Date'] = df_raw['Date'].astype(str).str.split(',').str[1].str.strip()
+
     df_raw['Date'] = df_raw['Date'].apply(convert_date)
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
     df_raw['Start_date'] = df_raw['Start_date'].apply(convert_date_patch)

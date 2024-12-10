@@ -7,6 +7,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+
+from selenium.common.exceptions import TimeoutException
 
 import pandas as pd
 import time
@@ -22,22 +26,53 @@ def scrape_eventim(days_in_advance=30):
     # Get the date x days from today
     today_plus_x = today + timedelta(days=days_in_advance)
 
+    # Preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
     #define url
     url = f"https://www.eventim.de/events/konzerte-1/?zipcode=24534&distance=100&shownonbookable=true&sort=DateAsc&dateFrom={today.year}-{today.month}-{today.day}&dateTo={today_plus_x.year}-{today_plus_x.month}-{today_plus_x.day}"
 
-    #prepare scraping
-    driver = webdriver.Firefox()
+    # Prepare scraping
+    driver = webdriver.Chrome(service=Service(), options=options)
     driver.get(url)
-    time.sleep(5)
-    wait = WebDriverWait(driver, 10)
 
-    # cookie rejection
+    # Wait for the page to load
+    time.sleep(5)  # Adjust or remove if explicit waits suffice
+
     try:
-        element = driver.find_element(By.ID, "cmpwelcomebtnno")
-        element.click()
+        # Explicit wait for either the cookie button or page content
+        wait = WebDriverWait(driver, 20)
+        
+        # Look for the cookie rejection button
+        cookie_button = wait.until(
+            EC.presence_of_element_located((By.ID, "cmpwelcomebtnno"))
+        )
+        cookie_button.click()
+        print("Cookie rejection button clicked.")
+    except TimeoutException:
+        print("Cookie rejection button not found or not clickable. Proceeding with scraping.")
+        pass
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"An unexpected error occurred while handling cookies: {e}")
+        pass
 
+    try:
+        # Wait for the main content to ensure the page is loaded
+        main_content = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "product-group-item"))
+        )
+        print("Main content loaded successfully.")
+    except TimeoutException:
+        print("Main content not found within the timeout period.")
+        driver.quit()
+
+        raise
+
+
+    # Continue with scraping logic
     extracted_info = [] 
 
     while True:
@@ -142,3 +177,5 @@ def convert_date_format(date_str):
 df_raw = scrape_eventim(30)
 df_prep = preprocess_eventim(df_raw)
 df_prep.to_csv("Scraped_Events_Eventim_HH_SH.csv")
+
+print(df_prep.head())

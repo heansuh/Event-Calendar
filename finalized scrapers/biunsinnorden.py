@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 import time
@@ -16,10 +18,20 @@ import time
 
 def scrape_biunsinnorden_sh_hh():
 
-    # preparations
+    # Preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    # URL to scrape
     url = "https://www.biunsinnorden.de/veranstaltungen/neumuenster/musik/umkreis-100"
-    driver = webdriver.Firefox()
+
+    # Initialize the driver with Chromium
+    driver = webdriver.Chrome(service=Service(), options=options)
     driver.get(url)
+
+    # Wait for elements to load
     wait = WebDriverWait(driver, 10)
     events_list = []
     time.sleep(5)
@@ -80,3 +92,6 @@ def preprocess_biunsinnorden(df_raw):
 df_raw = scrape_biunsinnorden_sh_hh()
 df_prep = preprocess_biunsinnorden(df_raw)
 df_prep.to_csv("Scraped_Events_BiUnsInNorden_SH_HH.csv")
+
+print(df_prep.head())
+print(df_prep.info())

@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 import time
@@ -17,12 +19,21 @@ from datetime import datetime, timedelta
 
 def scrape_eventbrite_hh_sh():
 
+    # Preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
     urls = ["https://www.eventbrite.de/d/germany--hamburg/music--events--this-month/?page=1",
         "https://www.eventbrite.de/d/germany--hamburg/music--events--next-month/?page=1",
         "https://www.eventbrite.de/d/germany--schleswig-holstein/music--events--this-month/?page=1",
         "https://www.eventbrite.de/d/germany--schleswig-holstein/music--events--next-month/?page=1"]
     
-    driver = webdriver.Firefox()
+    # Initialize the driver with Chromium
+    driver = webdriver.Chrome(service=Service(), options=options)
+    # driver.get(urls)
+
     df_raw = pd.DataFrame()
 
     for url in urls:

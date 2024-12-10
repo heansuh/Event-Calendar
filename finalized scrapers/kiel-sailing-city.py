@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 from datetime import datetime, timedelta
@@ -17,7 +19,14 @@ import time
 
 def scrape_kiel_sailing_city(days_in_advance=10):
     
-    driver = webdriver.Firefox()
+    # Preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    # Prepare scraping
+    driver = webdriver.Chrome(service=Service(), options=options)
     driver.get('https://kiel-sailing-city.de/veranstaltungen/kalender')
     time.sleep(5)
 
@@ -201,3 +210,5 @@ music = ['Nachtleben', 'Konzert', 'konzert', 'Musik', 'musik', 'Party', 'party',
 df_raw = scrape_kiel_sailing_city(10)
 df_prep = preprocess_kiel_sailing_city(df_raw)
 df_prep.to_csv("Scraped_Events_Kiel_Sailing_City.csv")
+
+print(df_prep.head())

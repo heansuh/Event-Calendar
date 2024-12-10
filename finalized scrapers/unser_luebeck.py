@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 import pandas as pd
 import locale
@@ -18,7 +20,13 @@ import time
 
 def scrape_unser_luebeck(days_in_advance=10): #events for today + 10 days in advance
 
-    driver = webdriver.Firefox() #later switch to headless for automated scraping
+    # Preparations
+    options = Options()
+    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    driver = webdriver.Chrome(service=Service(), options=options) #later switch to headless for automated scraping
     driver.get("https://www.unser-luebeck.de/veranstaltungskalender")
     time.sleep(3) #wait to fully load page
 
@@ -180,3 +188,5 @@ def convert_date_format(date_str):
 df_raw = scrape_unser_luebeck(10)
 df_prep = preprocess_unser_luebeck(df_raw)
 df_prep.to_csv("Scraped_Events_Unser_Luebeck.csv")
+
+print(df_prep.head())
