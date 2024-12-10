@@ -20,7 +20,7 @@ def scrape_biunsinnorden_sh_hh():
 
     # preparations
     options = Options()
-    #options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--headless")  # Run Chromium in headless mode
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     url = "https://www.biunsinnorden.de/veranstaltungen/neumuenster/musik/umkreis-100"
