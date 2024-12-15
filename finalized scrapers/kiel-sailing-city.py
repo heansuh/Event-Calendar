@@ -21,7 +21,7 @@ def scrape_kiel_sailing_city(days_in_advance=10):
     
     # preparations
     options = Options()
-    #options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--headless")  # Run Chromium in headless mode
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(service=Service(), options=options)
