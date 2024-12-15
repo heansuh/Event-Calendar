@@ -26,11 +26,14 @@ def scrape_eventim(days_in_advance=30):
 
     # preparations
     options = Options()
-    options.add_argument("--headless")  # Run Chromium in headless mode
+    #options.add_argument("--headless")  # Run Chromium in headless mode
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")  # avoid some rendering issues
+    options.add_argument("--window-size=1920,1080")  # avoid window size issues
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36") #avoid being blocked as an automatic scraper
     url = f"https://www.eventim.de/events/konzerte-1/?zipcode=24534&distance=100&shownonbookable=true&sort=DateAsc&dateFrom={today.year}-{today.month}-{today.day}&dateTo={today_plus_x.year}-{today_plus_x.month}-{today_plus_x.day}"
-
+    print(url)
     #prepare scraping
     driver = webdriver.Chrome(service=Service(), options=options)
     #driver = webdriver.Firefox()
@@ -48,7 +51,13 @@ def scrape_eventim(days_in_advance=30):
     extracted_info = [] 
 
     while True:
-        elements = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "product-group-item")))
+        
+        try: 
+            elements = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "product-group-item")))
+            print(f"Number of elements found: {len(elements)}")
+        except Exception as e:
+            print(f"Error: {e}")
+            driver.save_screenshot("screenshot.png")  # Save screenshot for debugging
 
         # Iterate over each element and extract the required information
         for element in elements:
@@ -146,7 +155,7 @@ def convert_date_format(date_str):
 
 # Example usage
 
-df_raw = scrape_eventim(30)
+df_raw = scrape_eventim(2) #30
 df_prep = preprocess_eventim(df_raw)
 df_prep.to_csv("Scraped_Events_Eventim_HH_SH.csv")
 print(df_prep.head())
