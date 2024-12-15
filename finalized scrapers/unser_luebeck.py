@@ -113,7 +113,6 @@ def get_current_date(driver):
 
 
 def get_events_on_date(driver, currently_processed_date):
-
     # Helper function to retrieve all event information per page by extracting the textual elements and processing them
     try:
         ul_element = WebDriverWait(driver, 10).until(
