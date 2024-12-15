@@ -143,6 +143,7 @@ def convert_date_format(date_str):
     else:
         return " "
 
+
 # Recommended usage of the above functions
 
 df_raw = scrape_live_gigs_hh_sh()
