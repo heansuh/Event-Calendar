@@ -21,7 +21,7 @@ def scrape_rausgegangen_hh_ki_hl_fl():
 
     # urls and relevant info to scrape
     scraping = [
-        ("https://rausgegangen.de/hamburg/kategorie/konzerte-und-musik/", 'Hamburg', 'Konzerte & Musik', 5),
+        ("https://rausgegangen.de/hamburg/kategorie/konzerte-und-musik/", 'Hamburg', 'Konzerte & Musik', 5), #TODO wieder alle
         ("https://rausgegangen.de/hamburg/kategorie/party/", 'Hamburg', 'Party', 1),
         ("https://rausgegangen.de/hamburg/kategorie/feste-und-festival/", 'Hamburg', 'Feste & Festival', 1),
         ("https://rausgegangen.de/kiel/kategorie/konzerte-und-musik/", 'Kiel', 'Konzerte & Musik', 1),
@@ -50,7 +50,8 @@ def scrape_rausgegangen_hh_ki_hl_fl():
         reject_button = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'iubenda-cs-reject-btn')))
         reject_button.click()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        #print(f"An error occurred: {e}")
+        print("No cookie window to reject, but no problem.")
 
     # change website to German (TODO unter chrome nicht nötig, aber stört den Prozess auch nicht)
     try:
@@ -60,7 +61,8 @@ def scrape_rausgegangen_hh_ki_hl_fl():
         submit_button.click()
         
     except Exception as e:
-        print(f"An error occurred: {e}")
+        #print(f"An error occurred: {e}")
+        print("No language switch here. No problem.")
 
     time.sleep(4)
     #actual scraping process
@@ -125,7 +127,8 @@ def scrape_rausgegangen_hh_ki_hl_fl():
     df_raw = df_raw[['Subject', 'Date', 'Time', 'Location', 'Price', 'Source', 'City', 'Category', 'Music label']]
 
     driver.close()
-    
+    print(df_raw.head())
+    print(df_raw.shape)
     return df_raw
 
 
@@ -139,7 +142,8 @@ def preprocess_rausgegangen(df_raw):
     df_raw['Description'] = df_raw['Source'] + ' , Preis: ' + df_raw['Price']
     df_raw.drop(columns=['Source', 'Price'], inplace=True)
 
-    df_raw['Date'] = df_raw['Date'].str.split(',').str[1].str.strip()
+    #df_raw['Date'] = df_raw['Date'].str.split(',').str[1].str.strip() 
+    df_raw['Date'] = df_raw['Date'].apply(process_date)
     df_raw['Date'] = df_raw['Date'].apply(convert_date)
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
     df_raw['Start_date'] = df_raw['Start_date'].apply(convert_date_patch)
@@ -169,6 +173,16 @@ month_mapping = {
     'Nov': '11',
     'Dez': '12'
 }
+
+def process_date(date_str):
+    if isinstance(date_str, str):
+        parts = date_str.split(',')
+        if len(parts) > 1:
+            return parts[1].strip()
+        else:
+            return " "
+    else:
+        return " "
 
 def convert_date(date_str):
     day, month = date_str.split('. ')

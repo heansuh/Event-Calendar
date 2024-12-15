@@ -44,13 +44,17 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
         "https://veranstaltungen.meinestadt.de/itzehoe/konzerte/alle",
         "https://veranstaltungen.meinestadt.de/itzehoe/partys-feiern/alle",
         "https://veranstaltungen.meinestadt.de/itzehoe/festivals/alle"
-    ]
+    ] 
     
     # preparations
     options = Options()
-    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--headless")  # run in headless mode
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")  # avoid some rendering issues
+    options.add_argument("--window-size=1920,1080")  # avoid window size issues
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36") #avoid being blocked as an automatic scraper
+    options.add_argument("--log-level=3")  # suppress most logs
     driver = webdriver.Chrome(service=Service(), options=options)
     #driver = webdriver.Firefox()
     wait = WebDriverWait(driver, 10) 
@@ -67,12 +71,13 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
             buttons = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "button-responsive-primary")))
             buttons[1].click()
         except Exception as e:
-            print(f"An error occurred: {e}")
+            #print(f"An error occurred: {e}")
+            print("Cookie rejection in iframe ging nicht. Macht aber nix.")
 
         # move back from cookie iframe 
         driver.switch_to.default_content()
 
-        for i in range(30): #daumenregel für hh konzerte (, rest lädt dann ggf zu viel)
+        for i in range(30): #daumenregel für hh konzerte (, rest lädt dann ggf zu viel) #30 TODO wieder auf 30
             time.sleep(10) #website lädt leider sehr langsam
             try: #weitere events laden
                 wait = WebDriverWait(driver, 10)
@@ -80,9 +85,11 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
                 load_more_button.click()
             except Exception as e:
                 #print(f"An error occurred: {e}")
+                print("Mehr laden ging nicht. Ist ok.") #TODO löschen
                 break
 
         elements = driver.find_elements(By.CSS_SELECTOR, 'div.flex.flex-col.w-full.p-16.screen-m\\:pl-0')
+        print("gefundene events:", str(len(elements)))
 
         # Loop through each element and extract the required information
         for element in elements:
@@ -119,7 +126,8 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
 
     df_raw = pd.DataFrame(events)
     driver.close()
-
+    print(df_raw.head())
+    print(df_raw.shape)
     return df_raw
 
 
@@ -127,13 +135,17 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
 
 def preprocess_meine_stadt(df_raw):
 
-    df_raw[["Start_date", "Start_time"]] = df_raw["Date_Time"].apply(lambda x: pd.Series(process_date_time(x)))
+    #df_raw[["Start_date", "Start_time"]] = df_raw["Date_Time"].apply(lambda x: pd.Series(process_date_time(x)))
+    df_raw["Start_date"] = df_raw["Date_Time"].apply(preprocess_date)
+    df_raw["Start_time"] = df_raw["Date_Time"].apply(preprocess_time)
     df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
     df_raw["End_date"] = df_raw["Start_date"]
     df_raw["End_time"] = " "
     df_raw.drop(columns=["Date_Time"], inplace= True)
 
-    df_raw[["City", "Location"]] = df_raw["City_Location"].apply(lambda x: pd.Series(process_city_location(x)))
+    #df_raw[["City", "Location"]] = df_raw["City_Location"].apply(lambda x: pd.Series(process_city_location(x)))
+    df_raw["City"] = df_raw["City_Location"].apply(preprocess_city)
+    df_raw["Location"] = df_raw["City_Location"].apply(preprocess_location)
     df_raw.drop(columns=["City_Location"], inplace= True)
     
     df_raw = df_raw.fillna(" ")
@@ -143,10 +155,24 @@ def preprocess_meine_stadt(df_raw):
 
 # Helper functions and elements
 
-def process_date_time(date_time_string):
+"""def process_date_time(date_time_string):
     date = date_time_string.split(" ")[1][:-1]
     time = date_time_string.split(" ")[2]
-    return date, time
+    return date, time"""
+
+def preprocess_date(date_time_string):
+    if len(date_time_string.split(" ")) > 1:
+        date = date_time_string.split(" ")[1][:-1]
+    else:
+        date = " "
+    return date
+
+def preprocess_time(date_time_string):
+    if len(date_time_string.split(" ")) > 2:
+        time = date_time_string.split(" ")[2]
+    else:
+        time = " "
+    return time
 
 def convert_date_format(date_str):
     date_str = str(date_str)
@@ -155,16 +181,31 @@ def convert_date_format(date_str):
     else:
         return " "
     
-def process_city_location(citlocstr):
+"""def process_city_location(citlocstr):
+    print(citlocstr)
     city = citlocstr.split(", ", 1)[0]
     location = citlocstr.split(", ", 1)[1]
-    return city, location
+    return city, location"""
+
+def preprocess_city(citlocstr):
+    city = citlocstr.split(", ", 1)[0]
+    return city
+
+def preprocess_location(citlocstr):
+    if len(citlocstr.split(", ", 1)) == 2:
+        location = citlocstr.split(", ", 1)[1]
+    else:
+        location = " "
+    return location
 
 
 # Example usage
 
 df_raw = scrape_meine_stadt()
+#df_raw.to_csv("Meine_Stadt_Test.csv")
 df_prep = preprocess_meine_stadt(df_raw)
 df_prep.to_csv("Scraped_Events_Meine_Stadt.csv")
 print(df_prep.head())
 print(df_prep.info())
+
+#unsupported pixel und handshake fail sind egal
