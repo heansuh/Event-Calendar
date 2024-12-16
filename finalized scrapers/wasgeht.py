@@ -35,6 +35,7 @@ def preprocessing(df):
     df['Subject'] = df['Title']
     df['Start_date'] = df['Date']
     df['Start_time'] = df['Time'].apply(format_time)
+    df['End_date'] = None
     df['End_time'] = None
     df['Location'] = df['Location'].str.replace("pin", "").str.strip()
     df['Description'] = ""
@@ -173,7 +174,7 @@ def wasgeht_scraper():
 
         preprocessing(city_df)
         
-        desired_columns = ['Subject', 'Start_date', 'Start_time', 'End_time', 'Location', 'City', 'Category', 'Description', 'Music_label']
+        desired_columns = ['Subject', 'Start_date', 'Start_time', 'End_date', 'End_time', 'Location', 'City', 'Category', 'Description', 'Music_label']
         city_df = city_df.reindex(columns=desired_columns)
         city_df['Music_label'] = city_df['Category'].apply(lambda x: True if x in ['konzert', 'theater'] else False)
 
