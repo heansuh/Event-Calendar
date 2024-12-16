@@ -120,20 +120,14 @@ def preprocess_sh_tourismus(df_raw):
     # Bringing the raw data into the agreed final data format (Changing column names into the agreed on final names, converting final date format from DD.MM.YYYY to YYYY-MM-DD, preprocessing start and end time,
     # dropping not further needed columns, checking the category information for music relatedness and adding music label True or False (with helper function), filling empties with " ", sorting the columns)
     df_raw.rename(columns={'Title': 'Subject'}, inplace=True)
-
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
     df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
     df_raw["End_date"] = df_raw["Start_date"]
-
     df_raw[['Start_time', 'End_time']] = df_raw['Time'].apply(preprocess_time)
     df_raw.drop(columns=['Time'], inplace=True)
-
     df_raw.rename(columns={'Source': 'Description'}, inplace=True)    
-
     df_raw['Music_label'] = df_raw['Category'].apply(check_music)
-
     df_raw = df_raw.fillna(" ")
-
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
 

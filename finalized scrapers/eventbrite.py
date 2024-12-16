@@ -66,30 +66,19 @@ def preprocess_eventbrite(df_raw):
     # converting final date format from DD.MM.YYYY to YYYY-MM-DD, checking the category information for music relatedness and adding music label True or False (with helper function),
     # dropping not further needed columns, filling empties with " ", sorting the columns)
     df_raw.loc[df_raw['Date and time'].str.contains(r'\s\+\s\d+\smore'), 'Date and time'] = df_raw['Date and time'].str[:-9]
-    
     df_raw['Start_time'] = df_raw['Date and time'].str[-5:]
-    
     df_raw['Date formated'] = df_raw['Date and time'].apply(parse_relative_date)
     df_raw['Date'] = df_raw['Date formated'].apply(extract_and_reformat_date)
-
     df_raw.rename(columns={'Title': 'Subject'}, inplace=True)
-
     df_raw.rename(columns={'Source': 'Description'}, inplace=True) 
-
     df_raw["Category"] = df_raw["Music_label"]
-
     df_raw.rename(columns={'Date': 'Start_date'}, inplace=True)
     df_raw['Start_date'] = df_raw['Start_date'].apply(convert_date)
     df_raw["End_date"] = df_raw["Start_date"]
-    
     df_raw.drop(columns=['Date and time', 'Date formated'], inplace=True)
-
     df_raw["End_time"] = " "
-
     df_raw['Music_label'] = df_raw['Music_label'].apply(check_music_label)
-
     df_raw = df_raw.fillna(" ")
-
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
 
