@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Rausgegangen.de (Hamburg, Kiel, Lübeck, Flensburg) Event Calendar
 # The functions scrape_rausgegangen_hh_ki_hl_fl() and preprocess_rausgegangen() can be used for the main scraping process
 

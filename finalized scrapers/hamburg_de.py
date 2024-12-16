@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Scraping Hamburg.de Event Calendar
 # The functions scrape_hamburg_de() and preprocess_hamburg_de() can be used for the main scraping process
 

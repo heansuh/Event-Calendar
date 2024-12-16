@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Biunsinnorden (Hamburg, Schleswig Holstein) Event Calendar
 # The functions scrape_biunsinnorden_sh_hh() and preprocess_biunsinnorden() can be used for the main scraping process
 

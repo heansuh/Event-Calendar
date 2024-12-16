@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Scraping Unser Lübeck Event Calendar
 # The functions scrape_unser_luebeck() and preprocess_unser_luebeck() can be used for the main scraping process
 

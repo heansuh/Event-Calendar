@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Kiel-Magazin (Kiel, Schleswig Holstein) Event Calendar
 # The functions scrape_kiel_magazin() and preprocess_kiel_magazin() can be used for the main scraping process
 

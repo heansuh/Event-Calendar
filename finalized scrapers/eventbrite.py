@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Scraping Eventbrite Event Calendar
 # The functions scrape_eventbrite_hh_sh() and preprocess_eventbrite() can be used for the main scraping process
 

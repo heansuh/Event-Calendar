@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Scraping Kiel-Sailing-City Event Calendar
 # The functions scrape_kiel_sailing_city() and preprocess_kiel_sailing_city() can be used for the main scraping process
 

@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Meine Stadt (HH, SH) Event Calendar
 # The functions scrape_meine_stadt() and preprocess_meine_stadt() can be used for the main scraping process
 

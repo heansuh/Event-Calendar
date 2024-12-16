@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Scraping SH-Tourismus Event Calendar
 # The functions scrape_sh_tourismus() and preprocess_sh_tourismus() can be used for the main scraping process
 

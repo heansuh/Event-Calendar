@@ -1,3 +1,4 @@
+# Scraper built by: Mareike Böckel
 # Script for Live Gigs (Hamburg, Schleswig Holstein) Event Calendar
 # The functions scrape_live_gigs_hh_sh() and preprocess_live_gigs() can be used for the main scraping process
 

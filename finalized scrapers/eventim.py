@@ -1,6 +1,7 @@
 # Disclaimer: The webpage of eventim actively blocks automatic scrapers and denies access if executed regularly. We therefore took the decision not to include this scraper anymore.
 # While technically there would be ways to circumvent the blocking, we did not feel comfortable with implementing that due to potential legal constraints. 
 
+# Scraper built by: Mareike Böckel and Flemming Reese
 # Script for Eventim (Hamburg, Schleswig Holstein) Event Calendar
 # The functions scrape_eventim() and preprocess_eventim() can be used for the main scraping process
 
