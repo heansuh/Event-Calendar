@@ -17,8 +17,9 @@ import time
 
 # Scraping function
 
-def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langsam lädt und es sehr viele passende events gibt
+def scrape_meine_stadt(): # Small warning: one execution takes >30 minutes, as there are many suitable events and locations on this website
 
+    # Defining the urls to scrape, varying location and category to use the url as an api to the website
     urls = [
         "https://veranstaltungen.meinestadt.de/hamburg/konzerte/alle",
         "https://veranstaltungen.meinestadt.de/hamburg/partys-feiern/alle",
@@ -46,52 +47,55 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
         "https://veranstaltungen.meinestadt.de/itzehoe/festivals/alle"
     ] 
     
-    # preparations
+    # Preparations for scraping (setting options (more than before due to prior difficulties with headless mode on this website), instantiating the Chrome driver, defining waits)
     options = Options()
-    options.add_argument("--headless")  # run in headless mode
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")  # avoid some rendering issues
-    options.add_argument("--window-size=1920,1080")  # avoid window size issues
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36") #avoid being blocked as an automatic scraper
-    options.add_argument("--log-level=3")  # suppress most logs
+    options.add_argument("--disable-gpu")  # to avoid some rendering issues
+    options.add_argument("--window-size=1920,1080")  # to avoid window size issues
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36") # to avoid being blocked as a headless scraper
+    options.add_argument("--log-level=3")  # to suppress most logs, as many unimportant ones appear here
     driver = webdriver.Chrome(service=Service(), options=options)
-    #driver = webdriver.Firefox()
     wait = WebDriverWait(driver, 10) 
 
+    # Creating a list to store events
     events = []
 
+    # Iterating over the different urls to scrape and opening each of them
     for url in urls:
         driver.get(url)
 
-        # cookie acceptance
+        # Closing the cookie window, if it appears
         try:
             iframe = wait.until(EC.presence_of_element_located((By.ID, "sp_message_iframe_1220563")))
             driver.switch_to.frame(iframe)
             buttons = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "button-responsive-primary")))
             buttons[1].click()
         except Exception as e:
-            #print(f"An error occurred: {e}")
-            print("Cookie rejection in iframe ging nicht. Macht aber nix.")
+            print("Cookie rejection in iframe didn't work. No problem for scraping.")
 
-        # move back from cookie iframe 
+        # Moving back from cookie iframe to actual website
         driver.switch_to.default_content()
 
-        for i in range(30): #daumenregel für hh konzerte (, rest lädt dann ggf zu viel) #30 TODO wieder auf 30
-            time.sleep(10) #website lädt leider sehr langsam
-            try: #weitere events laden
+        # Heuristic of how often to click on load more events button in order to minimally cover the proper timeframe also for location and category combinations with many events
+        # If not more events can be loaded the loop is left 
+        for i in range(30): 
+            time.sleep(10) # This website takes especially long to load properly
+            try: 
                 wait = WebDriverWait(driver, 10)
                 load_more_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@data-component="CsSecondaryButton"]')))
                 load_more_button.click()
             except Exception as e:
-                #print(f"An error occurred: {e}")
-                print("Mehr laden ging nicht. Ist ok.") #TODO löschen
+                print("No further events to load.")
                 break
 
+        # Finding all events per page, the specific web element representing an event is identified via CSS selector
         elements = driver.find_elements(By.CSS_SELECTOR, 'div.flex.flex-col.w-full.p-16.screen-m\\:pl-0')
-        print("gefundene events:", str(len(elements)))
+        print("Found events:", str(len(elements)))
 
-        # Loop through each element and extract the required information
+        # Iterating over all found event elements and extracting the required information
+        # As sometimes not all information is available per event, this part was made robust by using try-except statements
         for element in elements:
             
             try:
@@ -114,40 +118,38 @@ def scrape_meine_stadt(): #ein aufruf dauert etwa 30 min, weil die website langs
             except:
                 city_location = ' '
             
+            # All information per event is stored into a dictionary and the dictionary is appended to the list of events
             event = {
                 "Subject": title,
                 "Description": source, 
                 "Date_Time": date_time,
                 "City_Location": city_location,
                 "Category": url.split(('/'))[-2],
-                "Music_label": True
+                "Music_label": True # all scraped events from this website are music related
             }
             events.append(event)
 
+    # Last steps: Creating the dataframe of raw data from the event list, closing the driver and returning the dataframe
     df_raw = pd.DataFrame(events)
     driver.close()
-    print(df_raw.head())
-    print(df_raw.shape)
+
     return df_raw
 
 
 # Preprocessing function
 
 def preprocess_meine_stadt(df_raw):
-
-    #df_raw[["Start_date", "Start_time"]] = df_raw["Date_Time"].apply(lambda x: pd.Series(process_date_time(x)))
+    # Bringing the raw data into the agreed final data format (SEperating and preprocessing date, time, city and location information from the website with helper functions,
+    # converting date format to YYYY-MM-DD, dropping not further needed columns, filling empties with " ", sorting the columns)
     df_raw["Start_date"] = df_raw["Date_Time"].apply(preprocess_date)
     df_raw["Start_time"] = df_raw["Date_Time"].apply(preprocess_time)
     df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
     df_raw["End_date"] = df_raw["Start_date"]
     df_raw["End_time"] = " "
     df_raw.drop(columns=["Date_Time"], inplace= True)
-
-    #df_raw[["City", "Location"]] = df_raw["City_Location"].apply(lambda x: pd.Series(process_city_location(x)))
     df_raw["City"] = df_raw["City_Location"].apply(preprocess_city)
     df_raw["Location"] = df_raw["City_Location"].apply(preprocess_location)
     df_raw.drop(columns=["City_Location"], inplace= True)
-    
     df_raw = df_raw.fillna(" ")
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
     return df_prep
@@ -155,12 +157,8 @@ def preprocess_meine_stadt(df_raw):
 
 # Helper functions and elements
 
-"""def process_date_time(date_time_string):
-    date = date_time_string.split(" ")[1][:-1]
-    time = date_time_string.split(" ")[2]
-    return date, time"""
-
 def preprocess_date(date_time_string):
+    # Extracting date information if given in regular format
     if len(date_time_string.split(" ")) > 1:
         date = date_time_string.split(" ")[1][:-1]
     else:
@@ -168,6 +166,7 @@ def preprocess_date(date_time_string):
     return date
 
 def preprocess_time(date_time_string):
+    # Extracting time information if given in regular format
     if len(date_time_string.split(" ")) > 2:
         time = date_time_string.split(" ")[2]
     else:
@@ -175,23 +174,21 @@ def preprocess_time(date_time_string):
     return time
 
 def convert_date_format(date_str):
+    # Function for converting date format from DD.MM.YYYY to YYYY-MM-DD 
+    # Date format changed over the course of the project, so this function was added to older scrapers
     date_str = str(date_str)
     if "." in date_str:
         return pd.to_datetime(date_str, format='%d.%m.%Y').strftime('%Y-%m-%d')
     else:
         return " "
-    
-"""def process_city_location(citlocstr):
-    print(citlocstr)
-    city = citlocstr.split(", ", 1)[0]
-    location = citlocstr.split(", ", 1)[1]
-    return city, location"""
 
 def preprocess_city(citlocstr):
+    # Extracting city information if given in regular format
     city = citlocstr.split(", ", 1)[0]
     return city
 
 def preprocess_location(citlocstr):
+    # Extracting location information if given in regular format
     if len(citlocstr.split(", ", 1)) == 2:
         location = citlocstr.split(", ", 1)[1]
     else:
@@ -199,13 +196,10 @@ def preprocess_location(citlocstr):
     return location
 
 
-# Example usage
+# Recommended usage of the above functions
 
 df_raw = scrape_meine_stadt()
-#df_raw.to_csv("Meine_Stadt_Test.csv")
 df_prep = preprocess_meine_stadt(df_raw)
 df_prep.to_csv("Scraped_Events_Meine_Stadt.csv")
 print(df_prep.head())
 print(df_prep.info())
-
-#unsupported pixel und handshake fail sind egal
