@@ -36,7 +36,7 @@ def scrape_biunsinnorden_sh_hh():
     except Exception as e:
         print(e)
 
-    # Navigating through the first eight pages of results (8 was chosen as a heuristic for covering an appropriate timneframe)
+    # Navigating through the first eight pages of results (8 was chosen as a heuristic for covering an appropriate timeframe)
     # Navigation choice: Varying the URL to use it as an api to navigate through pages (proved as more stable than clicking on "next" button)
     for i in range(1,9):
         url = f"https://www.biunsinnorden.de/veranstaltungen/neumuenster/musik/umkreis-100?Page={i}#Termine"
@@ -62,7 +62,7 @@ def scrape_biunsinnorden_sh_hh():
                 'End_time': " ",
                 'Subject': event.find_element(By.CSS_SELECTOR, '.title a').get_attribute('title'),
                 'Category': event.find_element(By.CSS_SELECTOR, '.category').text,
-                'Music_label': True,
+                'Music_label': True, # All events on this website are music related
                 'Location': event.find_element(By.CSS_SELECTOR, '.venue a').get_attribute('title'),
                 'City': event.find_element(By.CSS_SELECTOR, '.city span[itemprop="addressLocality"]').text,
                 'Description': event.find_element(By.CSS_SELECTOR, '.title a').get_attribute('href')

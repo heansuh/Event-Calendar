@@ -1,5 +1,5 @@
 # Script for Live Gigs (Hamburg, Schleswig Holstein) Event Calendar
-# The functions scrape_live_gigs_hh_sh() and preprocess_live_gigs() should be imported to the script defining the main scraping process
+# The functions scrape_live_gigs_hh_sh() and preprocess_live_gigs() can be used for the main scraping process
 
 # Imports
 
@@ -18,39 +18,41 @@ import time
 
 def scrape_live_gigs_hh_sh():
 
-    # preparations
+    # Preparations for scraping (setting options, instantiating the Chrome driver, opening the website, defining waits)
     options = Options()
-    options.add_argument("--headless")  # Run Chromium in headless mode
+    options.add_argument("--headless")  
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     url = "https://www.livegigs.de/neumuenster/umkreis-100#Termine"
     driver = webdriver.Chrome(service=Service(), options=options)
-    #driver = webdriver.Firefox()
     driver.get(url)
     wait = WebDriverWait(driver, 10)
 
-    # cookie rejection
+    # Closing the cookie window
     try:
         button = wait.until(EC.element_to_be_clickable((By.ID, 'cookie-accept-required')))
         button.click()
     except Exception as e:
         print(f"An error occurred: {e}")
 
-    # Initialize a list to store the extracted information
+    # Creating a list to store events
     events_data = []
 
+    # Navigating through the first two pages of results (2 was chosen as a heuristic for covering an appropriate timeframe)
+    # Navigation choice: Clicking on the "next" button proved as a stable navigation option
     for i in range(2):
 
-        # Find all elements with the class 'box-eventline'
+        # Finding all events per page, the specific web element representing an event is identified via class name 
         elements = driver.find_elements(By.CLASS_NAME, 'box-eventline')
 
-        # Iterate over each element and extract the required information
+        # Iterating over all found event elements and extracting the required information
+        # As sometimes not all information is available per event, this part was made robust by using try-except statements
+        # Elements that have no title are skipped right away, if other information is missing, the fields are left empty at first
         for element in elements:
             try:
                 title = element.find_element(By.CLASS_NAME, 'summary').get_attribute('title')
                 title = title.split(" - ")[0]
             except:
-                #title = None
                 continue
 
             try:
@@ -64,11 +66,9 @@ def scrape_live_gigs_hh_sh():
                 time_standard = None
             
             try:
-                # Extract day, month, and year
                 day = element.find_element(By.CLASS_NAME, 'day').text
                 month = element.find_element(By.CLASS_NAME, 'month').get_attribute('title').split('-')[1]
                 year = element.find_element(By.CLASS_NAME, 'year').text
-                # Format date as DD.MM.YYYY
                 formatted_date = f"{day}.{month}.{year}"
             except:
                 formatted_date = None
@@ -88,42 +88,44 @@ def scrape_live_gigs_hh_sh():
             except:
                 city = None
 
-            # Append the extracted information as a dictionary to the list
+            # All information per event is stored into a dictionary and the dictionary is appended to the list of events
             events_data.append({
                 'Subject': title,
                 'Description': source,
                 'Start_time': time_standard,
                 'End_time': " ",
-                'Start_date': formatted_date, #label_date,
+                'Start_date': formatted_date,
                 'End_date': formatted_date,
                 'Category': category,
                 'Location': location,
                 'City': city,
-                'Music_label': True
+                'Music_label': True # All events on this website are music related
             })
 
-        # nur einmal weiterblättern, dann sind schon die events des nächsten monats (+puffer) abgedeckt
+        # Navigating to page 2 (this generally covers at minimum the events of the next month)
         if i < 1:
             try:
                 next_day_link = driver.find_element(By.XPATH, '//div[@class="standard link-text"]/a[contains(text(), "nächster Tag")]')
                 next_day_link.click()
                 time.sleep(5)
             except Exception as e:
-                print(f"An error occurred: {e}")
+                print("No second page exists.")
                 break
-
+    
+    # Last steps: Creating the dataframe of raw data from the event list, closing the driver and returning the dataframe
     df_raw = pd.DataFrame(events_data)
     driver.close()
+
     return df_raw
 
 
 # Preprocessing function
 
 def preprocess_live_gigs(df_raw):
+    # Bringing the raw data into the agreed final data format (Converting date format from DD.MM.YYYY to YYYY-MM-DD,
+    # lowercasing city names except for first letters, filling empties with " ", sorting the columns)
     df_raw["Start_date"] = df_raw["Start_date"].apply(convert_date_format)
     df_raw["End_date"] = df_raw["End_date"].apply(convert_date_format)
-    #df_raw["Start_date"] = pd.to_datetime(df_raw["Start_date"], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') #same as eventim TODO
-    #df_raw["End_date"] = pd.to_datetime(df_raw["End_date"], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') #same as eventim TODO
     df_raw['City'] = df_raw['City'].str.title()
     df_raw = df_raw.fillna(" ")
     df_prep = df_raw[['Subject','Start_date', 'End_date', 'Start_time', 'End_time', 'Location', 'City', 'Description', 'Category', 'Music_label']]
@@ -133,13 +135,16 @@ def preprocess_live_gigs(df_raw):
 # Helper functions and elements
 
 def convert_date_format(date_str):
+    # Function for converting date format from DD.MM.YYYY to YYYY-MM-DD 
+    # Date format changed over the course of the project, so this function was added to older scrapers
     date_str = str(date_str)
     if "." in date_str:
         return pd.to_datetime(date_str, format='%d.%m.%Y').strftime('%Y-%m-%d')
     else:
         return " "
 
-# Example usage
+
+# Recommended usage of the above functions
 
 df_raw = scrape_live_gigs_hh_sh()
 df_prep = preprocess_live_gigs(df_raw)
