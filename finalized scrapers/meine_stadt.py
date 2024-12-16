@@ -1,5 +1,5 @@
 # Script for Meine Stadt (HH, SH) Event Calendar
-# The functions scrape_meine_stadt() and preprocess_meine_stadt() should be imported to the script defining the main scraping process
+# The functions scrape_meine_stadt() and preprocess_meine_stadt() can be used for the main scraping process
 
 # Imports
 
@@ -139,7 +139,7 @@ def scrape_meine_stadt(): # Small warning: one execution takes >30 minutes, as t
 # Preprocessing function
 
 def preprocess_meine_stadt(df_raw):
-    # Bringing the raw data into the agreed final data format (SEperating and preprocessing date, time, city and location information from the website with helper functions,
+    # Bringing the raw data into the agreed final data format (Seperating and preprocessing date, time, city and location information from the website with helper functions,
     # converting date format to YYYY-MM-DD, dropping not further needed columns, filling empties with " ", sorting the columns)
     df_raw["Start_date"] = df_raw["Date_Time"].apply(preprocess_date)
     df_raw["Start_time"] = df_raw["Date_Time"].apply(preprocess_time)

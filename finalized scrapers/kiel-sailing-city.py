@@ -1,5 +1,5 @@
 # Script for Scraping Kiel-Sailing-City Event Calendar
-# The functions scrape_kiel_sailing_city() and preprocess_kiel_sailing_city() should be imported to the script defining the main scraping process
+# The functions scrape_kiel_sailing_city() and preprocess_kiel_sailing_city() can be used for the main scraping process
 
 # Imports
 
